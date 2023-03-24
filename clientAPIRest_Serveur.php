@@ -74,6 +74,7 @@ if (isset($_POST['submit'])){
 </form>
 
 <br>
+<!-- 
 <h1><center>Ajouter une phrase !</center></h1>
 
 <form method="post" action="http://localhost/r401/jeton/serveur.php">
@@ -81,6 +82,7 @@ if (isset($_POST['submit'])){
   <input type="text" name="phrase">
   <input type="submit" name = "submit" value="Submit">
 </form>
+-->
 
 <br>
     <h1><center>Chuck Norris REST API : Affichage</center></h1>

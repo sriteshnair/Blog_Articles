@@ -123,4 +123,8 @@ function getAll($linkpdo){
     return $matchingData;
 }
 
+function getOne(){
+    
+}
+
 ?>

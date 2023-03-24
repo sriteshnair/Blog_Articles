@@ -2,6 +2,7 @@
 /// Librairies éventuelles (pour la connexion à la BDD, etc.)
 include('connexion.php');
 include('jwt_utils.php');
+include('functions.php');
 
 /// Paramétrage de l'entête HTTP (pour la réponse au Client)
 header("Content-Type:application/json");
@@ -17,15 +18,24 @@ switch ($http_method) {
         $data = (array) json_decode($postedData,True);
         $id = $data['id'];
         $mdp = $data['mdp'];
-        if ($id == "john" && $mdp == "password"){
-            /// Traitement
-            $headers = array('alg' =>'HS256','typ'=>'JWT');
-            $payload = array('id'=>$id,'mdp'=>$mdp,'exp'=>(time()+60));
-            $jeton = generate_jwt($headers,$payload);
-            /// Envoi de la réponse au Client
-            deliver_response(201, "AUTHENTIFICATION OK !", $jeton);
+        $login = FALSE;
+
+        if(!empty($id) && !empty($mdp)){
+            $login = verifyPasswordDB($id,$mdp);
+            if($login) {
+                $role = getRole($id);
+                /// Traitement
+                $headers = array('alg' =>'HS256','typ'=>'JWT');
+                $payload = array('id'=>$id, 'role' => $role,'exp'=>(time()+60));
+                $jeton = generate_jwt($headers,$payload);
+                /// Envoi de la réponse au Client
+                deliver_response(201, "AUTHENTIFICATION OK !", $jeton);
+            }else{
+                deliver_response(411, "AUTHENTIFICATION ERROR ! ID/MOT DE PASSE NE SONT PAS BONS !", NULL);
+            }  
+
         }else{
-            deliver_response(411, "AUTHENTIFICATION ERROR !", NULL);
+            deliver_response(411, "ID ET MOT DE PASSE DOIT ETRE RENSEIGNE(S)", NULL);
         }
         break;
     default:

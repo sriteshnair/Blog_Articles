@@ -1,6 +1,6 @@
 <?php
         $server='localhost';
-        $db ='chucknorris';
+        $db ='blog';
         $login='root';
         $mdp='';
         
