@@ -16,9 +16,10 @@ $bearer_token = get_bearer_token();
 if(is_jwt_valid($bearer_token)){
     $verification = true;
     #Get User's Role from Payload
-    $role = getPayloadFromToken($bearer_token)->role;
+    $payload = getPayloadFromToken($bearer_token);
+    $role = $payload->role;
+    $login = $payload->login;
 }
-
 
 if(!$verification){
     deliver_response(498, "INVALID TOKEN", NULL);
@@ -41,22 +42,21 @@ if(!$verification){
             break;
         /// Cas de la méthode POST
         case "POST":
-            ini_set("allow_url_fopen", true);
-            /// Récupération des données envoyées par le Client
-            $postedData = file_get_contents('php://input');
-            parse_str($postedData,$data);
-            $phrase = $data['phrase'];
-            $date = date('y/m/d h:i:s');
-            
-            if (!empty($phrase)){
-                /// Traitement
-                $query = "INSERT INTO chuckn_facts VALUES (?,?,?,?,?,?,?)";
-                $insert = $linkpdo->prepare($query);
-                $insert->execute(array(0,$phrase,0,$date,null,0,0));
-                /// Envoi de la réponse au Client
-                deliver_response(201, "INSERT POST OK", NULL);
-            }else{
-                deliver_response(411, "PHRASE MUST NOT BE EMPTY", NULL);
+            switch($role){
+                case "Publisher":
+                    //Traitement Publisher
+                    ini_set("allow_url_fopen", true);
+                    /// Récupération des données envoyées par le Client
+                    $postedData = file_get_contents('php://input');
+                    $data = (array) json_decode($postedData,True);
+                    $contenu = $data['contenu'];
+                    $auteur = $login;
+                    putPublisher($linkpdo,$contenu,$auteur);
+                    break;
+                default:
+                    //Traitement Moderator et Anonymous
+                    deliver_response(403, "ERREUR : Pas de droit de publication", NULL);
+                    break;
             }
             break;
         /// Cas de la méthode PUT
@@ -132,4 +132,29 @@ function getOne(){
     
 }
 
+function putPublisher($linkpdo,$contenu,$auteur){
+    if ((!empty($contenu)) && (!empty($auteur))){
+        /// Traitement
+        $datepub = date('y/m/d h:i:s');
+        $query = "INSERT INTO article VALUES (?,?,?,?,?)";
+        $insert = $linkpdo->prepare($query);
+        $insert->execute(array(0,$datepub,null,$contenu,$auteur));
+        /// Envoi de la réponse au Client
+        deliver_response(201, "INSERT POST OK", NULL);
+    }else{
+        deliver_response(411, "CHAMP(S) NON-RESEIGNE(S)", NULL);
+    }
+}
+
+switch($role){
+    case "Moderator":
+        //Traitement moderator
+        break;
+    case "Publisher":
+        //Traitement publisher
+        break;
+    default:
+        //Traitement anonymous
+        break;
+}
 ?>

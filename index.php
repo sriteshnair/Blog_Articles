@@ -100,5 +100,4 @@ input[type=submit] {
     moderator2 : mod2
     publisher1 : pub1
     publisher2 : pub2
-    
 -->

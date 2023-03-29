@@ -26,7 +26,7 @@ switch ($http_method) {
                 $role = getRole($id);
                 /// Traitement
                 $headers = array('alg' =>'HS256','typ'=>'JWT');
-                $payload = array('id'=>$id, 'role' => $role,'exp'=>(time()+60));
+                $payload = array('login'=>$id, 'role' => $role,'exp'=>(time()+300));
                 $jeton = generate_jwt($headers,$payload);
                 /// Envoi de la réponse au Client
                 deliver_response(201, "AUTHENTIFICATION OK !", $jeton);
