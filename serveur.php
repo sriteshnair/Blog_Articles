@@ -15,7 +15,10 @@ $bearer_token = get_bearer_token();
 
 if(is_jwt_valid($bearer_token)){
     $verification = true;
+    #Get User's Role from Payload
+    $role = getPayloadFromToken($bearer_token)->role;
 }
+
 
 if(!$verification){
     deliver_response(498, "INVALID TOKEN", NULL);
@@ -102,6 +105,8 @@ if(!$verification){
             break;
     }
 }
+
+
     /// Envoi de la réponse au Client
 function deliver_response($status, $status_message, $data)
 {

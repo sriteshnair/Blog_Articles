@@ -76,4 +76,11 @@ function get_bearer_token() {
     return null;
 }
 
+function getPayloadFromToken($token){
+	$tokenParts = explode('.', $token);
+	$payload = base64_decode($tokenParts[1]);
+    $data = json_decode($payload);
+    return $data;
+}
+
 ?>
