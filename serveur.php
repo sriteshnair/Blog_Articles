@@ -23,23 +23,49 @@ if(is_jwt_valid($bearer_token)){
 
 if(!$verification){
     deliver_response(498, "INVALID TOKEN", NULL);
-}else{
+} else {
     switch ($http_method) {
-            /// Cas de la méthode GET
+        /// Cas de la méthode GET
         case "GET":
-            /// Récupération des critères de recherche envoyés par le Client
-            if (!empty($_GET['id'])) {
-                $id = $_GET['id'];
-                $query = "SELECT * FROM chuckn_facts WHERE id=?";
-                $select = $linkpdo->prepare($query);
-                $select->execute(array($id));
-                $matchingData = $select -> fetch();
-            }else{
-                $matchingData = getAll($linkpdo);
+            switch($role){
+                case "Publisher":
+                    /// Consulter un article
+                    if (!empty($_GET['id'])) {
+                        $id = $_GET['id'];
+                        $matchingData = getOneArticlePub($linkpdo, $id);
+                    // Consulter tous les articles
+                    } else {
+                        $matchingData = getAllArticlePub($linkpdo);
+                    }
+                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    break;
+
+                case "Moderator":
+                    /// Consulter un article
+                    if (!empty($_GET['id'])) {
+                        $id = $_GET['id'];
+                        $matchingData = getOneArticleMod($linkpdo, $id);
+                    // Consulter tous les articles
+                    }else{
+                        $matchingData = getAllArticleMod($linkpdo);
+                    }
+                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    break;
+
+                default:
+                    /// Consulter un article
+                    if (!empty($_GET['id'])) {
+                        $id = $_GET['id'];
+                        $matchingData = getOneArticleAnon($linkpdo, $id);
+                    // Consulter tous les articles
+                    }else{
+                        $matchingData = getAllArticleAnon($linkpdo);
+                    }
+                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    break;
             }
-            /// Envoi de la réponse au Client
-            deliver_response(200, "GET OK : DATA SENT !", $matchingData);
             break;
+
         /// Cas de la méthode POST
         case "POST":
             switch($role){
@@ -116,7 +142,7 @@ if(!$verification){
                 default:
                     //Traitement d'autres roles
                     deliver_response(403, "ERREUR : Pas de droit de UPDATE", NULL);
-                break;
+                    break;
         }
         break;
     }
@@ -137,16 +163,119 @@ function deliver_response($status, $status_message, $data)
     echo $json_response;
 }
 
-function getAll($linkpdo){
-    $req = $linkpdo->query("SELECT * FROM chuckn_facts");
-    $req->execute(array());
-    $matchingData = $req->fetchAll(PDO::FETCH_ASSOC);
-    return $matchingData;
+function getOneArticleAnon($linkpdo, $id){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu 
+                            FROM article a, user u
+                            WHERE a.login = u.login
+                            AND a.id_article = ?");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $select = $linkpdo->prepare($query);
+        $select->execute(array($id));
+        $matchingData = $select -> fetch();
+        return $matchingData;
+    }
 }
 
-function getOne(){
-    
+function getAllArticleAnon($linkpdo){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu 
+                            FROM article a, user u
+                            WHERE a.login = u.login");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $req->execute(array());
+        $matchingData = $req->fetchAll(PDO::FETCH_ASSOC);
+        return $matchingData;
+    }
 }
+
+function getOneArticlePub($linkpdo, $id){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+                            FROM article a, user u
+                            WHERE a.login = u.login
+                            AND a.id_article = ?");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $select = $linkpdo->prepare($query);
+        $select->execute(array($id));
+        $matchingData = $select -> fetch();
+        return $matchingData;
+    }
+}
+
+function getAllArticlePub($linkpdo){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+                            FROM article a, user u
+                            WHERE a.login = u.login");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $req->execute(array());
+        $matchingData = $req->fetchAll(PDO::FETCH_ASSOC);
+        return $matchingData;
+    }
+}
+
+function getOneArticleMod($linkpdo, $id){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+                            GROUP_CONCAT(DISTINCT l1.login) AS users_like,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+                            GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
+                            FROM article a
+                            INNER JOIN user u ON a.login = u.login
+                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
+                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
+                            WHERE a.id_article = ?
+                            GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $select = $linkpdo->prepare($query);
+        $select->execute(array($id));
+        $matchingData = $select -> fetch();
+        return $matchingData;
+    }
+}
+
+function getAllArticleMod($linkpdo){
+    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+                            GROUP_CONCAT(DISTINCT l1.login) AS users_like,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes,
+                            GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
+                            FROM article a
+                            INNER JOIN user u ON a.login = u.login
+                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
+                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
+                            GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
+    if (!$req) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
+        $matchingData = $req->fetchAll(PDO::FETCH_ASSOC);
+        return $matchingData;
+    }
+}
+
 
 function putPublisher($linkpdo,$contenu,$auteur){
     if ((!empty($contenu)) && (!empty($auteur))){
