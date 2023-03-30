@@ -201,8 +201,8 @@ function getAllArticleAnon($linkpdo){
 
 function getOneArticlePub($linkpdo, $id){
     $query = "SELECT u.username, a.date_pub, a.contenu,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes
               FROM article a, user u
               WHERE a.login = u.login
               AND a.id_article = ?";
@@ -220,8 +220,8 @@ function getOneArticlePub($linkpdo, $id){
 
 function getAllArticlePub($linkpdo){
     $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes
                             FROM article a, user u
                             WHERE a.login = u.login");
     if (!$req) {
@@ -237,8 +237,8 @@ function getAllArticlePub($linkpdo){
 
 function getMyArticlePub($linkpdo, $login){
     $query = "SELECT u.username, a.date_pub, a.contenu,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes
               FROM article a, user u
               WHERE a.login = u.login
               AND a.login = ?";
@@ -256,14 +256,14 @@ function getMyArticlePub($linkpdo, $login){
 
 function getOneArticleMod($linkpdo, $id){
     $query = "SELECT u.username, a.date_pub, a.contenu,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
               GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes
               GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
               FROM article a
               INNER JOIN user u ON a.login = u.login
-              LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
-              LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
+              LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
+              LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
               WHERE a.id_article = ?
               GROUP BY a.id_article, u.username, a.date_pub, a.contenu";
     $select = $linkpdo->prepare($query);
@@ -280,14 +280,14 @@ function getOneArticleMod($linkpdo, $id){
 
 function getAllArticleMod($linkpdo){
     $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
                             GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes,
+                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
                             GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
                             FROM article a
                             INNER JOIN user u ON a.login = u.login
-                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
-                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
+                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
+                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
                             GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
     if (!$req) {
         $error = $linkpdo->errorInfo();
