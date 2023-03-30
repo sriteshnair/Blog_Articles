@@ -61,48 +61,64 @@ if(!$verification){
             break;
         /// Cas de la méthode PUT
         case "PUT":
-            /// Récupération des données envoyées par le Client
-            ini_set("allow_url_fopen", true);
-            /// Récupération des données envoyées par le Client
-            $postedData = file_get_contents('php://input');
-            $postedData = (array) json_decode($postedData,True);
-            print_r($postedData);
 
-            $id = $postedData['id'];
-            $phrase = $postedData['phrase'];
-            $date_modif = date('y/m/d h:i:s');
-            //$vote = $postedData['vote'];
-            //$date_ajout = $postedData['date_ajout'];
-            //$faute = $postedData['faute'];
-            //$signalement = $postedData['signalement'];
+            switch($role){
+                case "Publisher":
+                    //Traitement moderator
+                    ini_set("allow_url_fopen", true);
+                    /// Récupération des données envoyées par le Client
+                    $postedData = file_get_contents('php://input');
+                    $postedData = (array) json_decode($postedData,True);
 
-            /// Traitement
-            //$query = "UPDATE chuckn_facts phrase = ?, vote = ?, date_ajout = ?, date_modif = ?, faute = ?, signalement = ? WHERE id = ?";
-            $query = "UPDATE chuckn_facts SET phrase = ?,date_modif = ? WHERE id = ?";
-            $update = $linkpdo->prepare($query);
-            $update->execute(array($phrase,$date_modif,$id));
-            /// Envoi de la réponse au Client
-            if ($update){
-                deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
-            }else{
-                deliver_response(400, "UPDATE ERROR", NULL);
+                    $id = $postedData['id'];
+                    $datepub = $postedData['date_pub'];
+                    $date_modif = date('y/m/d h:i:s');
+                    $contenu = $postedData['contenu'];
+
+                    if(empty($id) || empty($datepub) || empty($contenu)){
+                        deliver_response(403, "ERREUR : Les champs doivent tous être renseignés", NULL);
+                    }else{
+                        // Traitement
+                        $query = "UPDATE article SET date_pub = ?, date_modif = ?, contenu = ? WHERE id_article = ?";
+                        $update = $linkpdo->prepare($query);
+                        $update->execute(array($datepub,$date_modif,$contenu,$id));
+                        /// Envoi de la réponse au Client
+                        if ($update){
+                            deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
+                        }else{
+                            deliver_response(400, "UPDATE ERROR", NULL);
+                        }
+                    }
+
+                    break;
+                default:
+                    //Traitement d'autres roles
+                    deliver_response(403, "ERREUR : Pas de droit de UPDATE", NULL);
+                    break;
             }
+
             break;
             /// Cas de la méthode DELETE
-        default:
-            /// Récupération de l'identifiant de la ressource envoyé par le Client
-            if (!empty($_GET['id'])) {
-                /// Traitement
-                $id = $_GET['id'];
-                $query = "DELETE FROM chuckn_facts WHERE id = ?";
-                $delete = $linkpdo->prepare($query);
-                $delete->execute(array($id));
-            }
-            /// Envoi de la réponse au Client
-            if($delete){
-                deliver_response(200, "DELETE OK : ".implode($delete->errorInfo()), NULL);
-            }
-            break;
+        case "DELETE":
+            switch($role){
+                case "Publisher" || "Moderator":
+                    //Traitement des roles Publisher et Moderator
+                    if (!empty($_GET['id'])) {
+                        /// Traitement
+                        $id = $_GET['id'];
+                        $delete = deletePubMod($linkpdo,$id);
+                    }
+                    /// Envoi de la réponse au Client
+                    if($delete){
+                        deliver_response(200, "DELETE OK : ".implode($delete->errorInfo()), NULL);
+                    }
+                    break;
+                default:
+                    //Traitement d'autres roles
+                    deliver_response(403, "ERREUR : Pas de droit de UPDATE", NULL);
+                break;
+        }
+        break;
     }
 }
 
@@ -146,6 +162,13 @@ function putPublisher($linkpdo,$contenu,$auteur){
     }
 }
 
+function deletePubMod($linkpdo,$id){
+    $query = "DELETE FROM article WHERE id_article = ?";
+    $delete = $linkpdo->prepare($query);
+    $delete->execute(array($id));
+    return $delete;
+}
+/*
 switch($role){
     case "Moderator":
         //Traitement moderator
@@ -157,4 +180,5 @@ switch($role){
         //Traitement anonymous
         break;
 }
+*/
 ?>
