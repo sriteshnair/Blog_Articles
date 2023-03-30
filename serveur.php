@@ -33,6 +33,10 @@ if(!$verification){
                     if (!empty($_GET['id'])) {
                         $id = $_GET['id'];
                         $matchingData = getOneArticlePub($linkpdo, $id);
+                    // Consulter mes articles
+                    } elseif (!empty($_GET['login'])){
+                        $login = $_GET['login'];
+                        $matchingData = getMyArticlePub($linkpdo, $login);
                     // Consulter tous les articles
                     } else {
                         $matchingData = getAllArticlePub($linkpdo);
@@ -46,7 +50,7 @@ if(!$verification){
                         $id = $_GET['id'];
                         $matchingData = getOneArticleMod($linkpdo, $id);
                     // Consulter tous les articles
-                    }else{
+                    } else {
                         $matchingData = getAllArticleMod($linkpdo);
                     }
                     deliver_response(200, "GET OK : DATA SENT !", $matchingData);
@@ -164,16 +168,16 @@ function deliver_response($status, $status_message, $data)
 }
 
 function getOneArticleAnon($linkpdo, $id){
-    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu 
-                            FROM article a, user u
-                            WHERE a.login = u.login
-                            AND a.id_article = ?");
-    if (!$req) {
+    $query = "SELECT u.username, a.date_pub, a.contenu 
+              FROM article a, user u
+              WHERE a.login = u.login
+              AND a.id_article = ?";
+    $select = $linkpdo->prepare($query);
+    if (!$select) {
         $error = $linkpdo->errorInfo();
         echo "Erreur execution requete: " . $error[2];
         return false;
     } else {
-        $select = $linkpdo->prepare($query);
         $select->execute(array($id));
         $matchingData = $select -> fetch();
         return $matchingData;
@@ -196,18 +200,18 @@ function getAllArticleAnon($linkpdo){
 }
 
 function getOneArticlePub($linkpdo, $id){
-    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
-                            FROM article a, user u
-                            WHERE a.login = u.login
-                            AND a.id_article = ?");
-    if (!$req) {
+    $query = "SELECT u.username, a.date_pub, a.contenu,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              FROM article a, user u
+              WHERE a.login = u.login
+              AND a.id_article = ?";
+    $select = $linkpdo->prepare($query);
+    if (!$select) {
         $error = $linkpdo->errorInfo();
         echo "Erreur execution requete: " . $error[2];
         return false;
     } else {
-        $select = $linkpdo->prepare($query);
         $select->execute(array($id));
         $matchingData = $select -> fetch();
         return $matchingData;
@@ -231,24 +235,43 @@ function getAllArticlePub($linkpdo){
     }
 }
 
-function getOneArticleMod($linkpdo, $id){
-    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
-                            GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
-                            GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
-                            FROM article a
-                            INNER JOIN user u ON a.login = u.login
-                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
-                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
-                            WHERE a.id_article = ?
-                            GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
-    if (!$req) {
+function getMyArticlePub($linkpdo, $login){
+    $query = "SELECT u.username, a.date_pub, a.contenu,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              FROM article a, user u
+              WHERE a.login = u.login
+              AND a.login = ?";
+    $select = $linkpdo->prepare($query);
+    if (!$select) {
         $error = $linkpdo->errorInfo();
         echo "Erreur execution requete: " . $error[2];
         return false;
     } else {
-        $select = $linkpdo->prepare($query);
+        $select->execute(array($login));
+        $matchingData = $select -> fetchAll(PDO::FETCH_ASSOC);
+        return $matchingData;
+    }
+}
+
+function getOneArticleMod($linkpdo, $id){
+    $query = "SELECT u.username, a.date_pub, a.contenu,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'like') AS likes,
+              GROUP_CONCAT(DISTINCT l1.login) AS users_like,
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 'dislike') AS dislikes
+              GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
+              FROM article a
+              INNER JOIN user u ON a.login = u.login
+              LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 'like'
+              LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = 'dislike'
+              WHERE a.id_article = ?
+              GROUP BY a.id_article, u.username, a.date_pub, a.contenu";
+    $select = $linkpdo->prepare($query);
+    if (!$select) {
+        $error = $linkpdo->errorInfo();
+        echo "Erreur execution requete: " . $error[2];
+        return false;
+    } else {
         $select->execute(array($id));
         $matchingData = $select -> fetch();
         return $matchingData;
