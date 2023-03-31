@@ -24,10 +24,11 @@ Ce projet est composé de 3 serveurs API :
 - à la requete *PUT*. Les champs obligatoires à préciser sont : "id", "date_pub", "contenu"
 - à la requete *DELETE*. En précisant l'ID pour supprimer l'article
 
-### Le serveur de *Like* permet aux utilisateurs d'avoir acces (Selon les roles spécifiés):
+### Le serveur *Like* permet aux utilisateurs d'avoir acces (Selon les roles spécifiés):
 - à la requete *POST*. Les champs obligatoires à préciser sont : "typeLike" et "id_article"
 - à la requete *PUT*. Les champs obligatoires à préciser sont : "typeLike" et "id_article" (pour changer de *Like à Dislike* ou *Dislike --> Like*)
 - à la requete *DELETE*. En précisant ID pour supprimer le like (ni like ni dislike)
+> ***Pour typeLike : Like = 1, Dislike = -1***
 
 ### Le serveur *Jeton* permet aux utilisateurs de récuperer son jeton après l'identification :
 - Requete *POST*, Les champs obligatoires à préciser sont : "id" et "mdp"
