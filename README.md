@@ -61,8 +61,7 @@ URLs :
 
 ### *PUT* :
 - URL : http://localhost/R4.01/blog/serveur.php
-- Donnée : {"id" : 1,"date_pub" : "2022-02-01","contenu" : "Cet article est edité"}
-//À changer : TAK BOLEH TUKAR DATE PUB
+- Donnée : {"id" : 1,"contenu" : "Cet article est edité"}
 
 ### *DELETE* :
 - URL : http://localhost/R4.01/blog/serveur.php/?id=3
@@ -84,6 +83,6 @@ URLs :
 ## Tips
 Pour tester chaque requete, il faut recuperer son jeton du serveurJeton en envoyant une requete POST avec son id et mot de passe. Copier le jeton et coller dans la partie Authorization sur Postman API. Les fichiers Postman API sont également disponibles dans le projet.
 
-Le lien GITHUB pour ce projet : ...
+Le lien GITHUB pour ce projet : https://github.com/sriteshnair/Blog_Articles
 
 # Bonne utilisation!
