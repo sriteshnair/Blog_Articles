@@ -34,8 +34,13 @@ if(is_jwt_valid($bearer_token)){
                         $matchingData = getOneArticlePub($linkpdo, $id);
                     // Consulter mes articles
                     } elseif (!empty($_GET['login'])){
-                        $login = $_GET['login'];
-                        $matchingData = getMyArticlePub($linkpdo, $login);
+                        if ($_GET['login']==$login) {
+                            $matchingData = getMyArticlePub($linkpdo, $login);
+                        } else {
+                            deliver_response(403, "GET ERROR : PLEASE ENTER YOUR LOGIN", null);
+                            break;
+                        }
+                        
                     // Consulter tous les articles
                     } else {
                         $matchingData = getAllArticlePub($linkpdo);
@@ -93,7 +98,7 @@ if(is_jwt_valid($bearer_token)){
                     $data = (array) json_decode($postedData,True);
                     $contenu = $data['contenu'];
                     $auteur = $login;
-                    putPublisher($linkpdo,$contenu,$auteur);
+                    postPublisher($linkpdo,$contenu,$auteur);
                     break;
                 default:
                     //Traitement Moderator et Anonymous
@@ -121,15 +126,7 @@ if(is_jwt_valid($bearer_token)){
                         deliver_response(403, "ERREUR : Les champs doivent tous être renseignés", NULL);
                     }else{
                         // Traitement
-                        $query = "UPDATE article SET date_pub = ?, date_modif = ?, contenu = ? WHERE id_article = ?";
-                        $update = $linkpdo->prepare($query);
-                        $update->execute(array($datepub,$date_modif,$contenu,$id));
-                        /// Envoi de la réponse au Client
-                        if ($update){
-                            deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
-                        }else{
-                            deliver_response(400, "UPDATE ERROR", NULL);
-                        }
+                        putPublisher($linkpdo,$datepub,$date_modif,$contenu,$id);
                     }
 
                     break;
@@ -157,7 +154,7 @@ if(is_jwt_valid($bearer_token)){
                     break;
                 default:
                     //Traitement d'autres roles
-                    deliver_response(403, "ERREUR : Pas de droit de UPDATE", NULL);
+                    deliver_response(403, "ERREUR : Pas de droit de DELETE", NULL);
                     break;
         }
         break;
@@ -165,7 +162,7 @@ if(is_jwt_valid($bearer_token)){
 
 
 
-    /// Envoi de la réponse au Client
+/// Envoi de la réponse au Client
 function deliver_response($status, $status_message, $data)
 {
     /// Paramétrage de l'entête HTTP, suite
@@ -191,7 +188,7 @@ function getOneArticleAnon($linkpdo, $id){
         return false;
     } else {
         $select->execute(array($id));
-        $matchingData = $select -> fetch();
+        $matchingData = $select -> fetch(PDO::FETCH_ASSOC);
         return $matchingData;
     }
 }
@@ -270,7 +267,7 @@ function getOneArticleMod($linkpdo, $id){
     $query = "SELECT u.username, a.date_pub, a.contenu,
               (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
               GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes
+              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
               GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
               FROM article a
               INNER JOIN user u ON a.login = u.login
@@ -312,7 +309,7 @@ function getAllArticleMod($linkpdo){
 }
 
 
-function putPublisher($linkpdo,$contenu,$auteur){
+function postPublisher($linkpdo,$contenu,$auteur){
     if ((!empty($contenu)) || (!empty($auteur))){
         /// Traitement
         $datepub = date('y/m/d h:i:s');
@@ -321,8 +318,20 @@ function putPublisher($linkpdo,$contenu,$auteur){
         $insert->execute(array(0,$datepub,null,$contenu,$auteur));
         /// Envoi de la réponse au Client
         deliver_response(201, "INSERT POST OK", NULL);
-    }else{
+    } else {
         deliver_response(411, "CHAMP(S) NON-RESEIGNE(S)", NULL);
+    }
+}
+
+function putPublisher($linkpdo,$datepub,$date_modif,$contenu,$id){
+    $query = "UPDATE article SET date_pub = ?, date_modif = ?, contenu = ? WHERE id_article = ?";
+    $update = $linkpdo->prepare($query);
+    $update->execute(array($datepub,$date_modif,$contenu,$id));
+    /// Envoi de la réponse au Client
+    if ($update){
+        deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
+    }else{
+        deliver_response(400, "UPDATE ERROR", NULL);
     }
 }
 
@@ -332,17 +341,5 @@ function deletePubMod($linkpdo,$id){
     $delete->execute(array($id));
     return $delete;
 }
-/*
-switch($role){
-    case "Moderator":
-        //Traitement moderator
-        break;
-    case "Publisher":
-        //Traitement publisher
-        break;
-    default:
-        //Traitement anonymous
-        break;
-}
-*/
+
 ?>
