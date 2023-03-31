@@ -2,7 +2,7 @@
 /// Librairies éventuelles (pour la connexion à la BDD, etc.)
 include('connexion.php');
 include('jwt_utils.php');
-include('functionLike.php');
+include('functionsLike.php');
 
 /// Paramétrage de l'entête HTTP (pour la réponse au Client)
 header("Content-Type:application/json");

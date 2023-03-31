@@ -103,16 +103,18 @@ function getMyArticlePub($linkpdo, $login){
 
 function getOneArticleMod($linkpdo, $id){
     $query = "SELECT u.username, a.date_pub, a.contenu,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
-              GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-              (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
-              GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
-              FROM article a
-              INNER JOIN user u ON a.login = u.login
-              LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
-              LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
-              WHERE a.id_article = ?
-              GROUP BY a.id_article, u.username, a.date_pub, a.contenu";
+            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
+            GROUP_CONCAT(DISTINCT u2.username) AS users_like,
+            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
+            GROUP_CONCAT(DISTINCT u3.username) AS users_dislike
+            FROM article a
+            INNER JOIN user u ON a.login = u.login
+            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
+            LEFT JOIN user u2 ON l1.login = u2.login
+            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
+            LEFT JOIN user u3 ON l2.login = u3.login
+            WHERE a.id_article = ?
+            GROUP BY a.id_article, u.username, a.date_pub, a.contenu";
     $select = $linkpdo->prepare($query);
     if (!$select) {
         $error = $linkpdo->errorInfo();
@@ -126,16 +128,18 @@ function getOneArticleMod($linkpdo, $id){
 }
 
 function getAllArticleMod($linkpdo){
-    $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
-                            GROUP_CONCAT(DISTINCT l1.login) AS users_like,
-                            (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
-                            GROUP_CONCAT(DISTINCT l2.login) AS users_dislike
-                            FROM article a
-                            INNER JOIN user u ON a.login = u.login
-                            LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
-                            LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
-                            GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
+        $req = $linkpdo->query("SELECT u.username, a.date_pub, a.contenu,
+                                (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = 1) AS likes,
+                                GROUP_CONCAT(DISTINCT u2.username) AS users_like,
+                                (SELECT COUNT(*) FROM Liker WHERE id_article = a.id_article AND typeLike = -1) AS dislikes,
+                                GROUP_CONCAT(DISTINCT u3.username) AS users_dislike
+                                FROM article a
+                                INNER JOIN user u ON a.login = u.login
+                                LEFT JOIN Liker l1 ON a.id_article = l1.id_article AND l1.typeLike = 1
+                                LEFT JOIN user u2 ON l1.login = u2.login
+                                LEFT JOIN Liker l2 ON a.id_article = l2.id_article AND l2.typeLike = -1
+                                LEFT JOIN user u3 ON l2.login = u3.login
+                                GROUP BY a.id_article, u.username, a.date_pub, a.contenu");
     if (!$req) {
         $error = $linkpdo->errorInfo();
         echo "Erreur execution requete: " . $error[2];
