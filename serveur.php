@@ -19,11 +19,10 @@ if(is_jwt_valid($bearer_token)){
     $payload = getPayloadFromToken($bearer_token);
     $role = $payload->role;
     $login = $payload->login;
+}else{
+    $role = "Anonymous";
 }
 
-if(!$verification){
-    deliver_response(498, "INVALID TOKEN", NULL);
-} else {
     switch ($http_method) {
         /// Cas de la méthode GET
         case "GET":
@@ -41,7 +40,12 @@ if(!$verification){
                     } else {
                         $matchingData = getAllArticlePub($linkpdo);
                     }
-                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    
+                    if ($matchingData == false){
+                        deliver_response(404, "GET ERROR : NO DATA FOUND !", null);
+                    }else{
+                        deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    }
                     break;
 
                 case "Moderator":
@@ -53,7 +57,11 @@ if(!$verification){
                     } else {
                         $matchingData = getAllArticleMod($linkpdo);
                     }
-                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    if ($matchingData == false){
+                        deliver_response(404, "GET ERROR : NO DATA FOUND !", null);
+                    }else{
+                        deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    }
                     break;
 
                 default:
@@ -65,7 +73,11 @@ if(!$verification){
                     }else{
                         $matchingData = getAllArticleAnon($linkpdo);
                     }
-                    deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    if ($matchingData == false){
+                        deliver_response(404, "GET ERROR : NO DATA FOUND !", null);
+                    }else{
+                        deliver_response(200, "GET OK : DATA SENT !", $matchingData);
+                    }
                     break;
             }
             break;
@@ -150,7 +162,7 @@ if(!$verification){
         }
         break;
     }
-}
+
 
 
     /// Envoi de la réponse au Client
@@ -213,7 +225,7 @@ function getOneArticlePub($linkpdo, $id){
         return false;
     } else {
         $select->execute(array($id));
-        $matchingData = $select -> fetch();
+        $matchingData = $select -> fetch(PDO::FETCH_ASSOC);
         return $matchingData;
     }
 }
@@ -273,7 +285,7 @@ function getOneArticleMod($linkpdo, $id){
         return false;
     } else {
         $select->execute(array($id));
-        $matchingData = $select -> fetch();
+        $matchingData = $select -> fetch(PDO::FETCH_ASSOC);
         return $matchingData;
     }
 }
@@ -301,7 +313,7 @@ function getAllArticleMod($linkpdo){
 
 
 function putPublisher($linkpdo,$contenu,$auteur){
-    if ((!empty($contenu)) && (!empty($auteur))){
+    if ((!empty($contenu)) || (!empty($auteur))){
         /// Traitement
         $datepub = date('y/m/d h:i:s');
         $query = "INSERT INTO article VALUES (?,?,?,?,?)";
