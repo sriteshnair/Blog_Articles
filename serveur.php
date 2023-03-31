@@ -118,15 +118,14 @@ if(is_jwt_valid($bearer_token)){
                     $postedData = (array) json_decode($postedData,True);
 
                     $id = $postedData['id'];
-                    $datepub = $postedData['date_pub'];
                     $date_modif = date('y/m/d h:i:s');
                     $contenu = $postedData['contenu'];
 
-                    if(empty($id) || empty($datepub) || empty($contenu)){
+                    if(empty($id) || empty($contenu)){
                         deliver_response(403, "ERREUR : Les champs doivent tous être renseignés", NULL);
                     }else{
                         // Traitement
-                        putPublisher($linkpdo,$datepub,$date_modif,$contenu,$id);
+                        putPublisher($linkpdo,$date_modif,$contenu,$id);
                     }
 
                     break;
@@ -323,10 +322,10 @@ function postPublisher($linkpdo,$contenu,$auteur){
     }
 }
 
-function putPublisher($linkpdo,$datepub,$date_modif,$contenu,$id){
-    $query = "UPDATE article SET date_pub = ?, date_modif = ?, contenu = ? WHERE id_article = ?";
+function putPublisher($linkpdo,$date_modif,$contenu,$id){
+    $query = "UPDATE article SET date_modif = ?, contenu = ? WHERE id_article = ?";
     $update = $linkpdo->prepare($query);
-    $update->execute(array($datepub,$date_modif,$contenu,$id));
+    $update->execute(array($date_modif,$contenu,$id));
     /// Envoi de la réponse au Client
     if ($update){
         deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
