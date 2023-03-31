@@ -45,27 +45,24 @@ if(is_jwt_valid($bearer_token)){
             break;
         /// Cas de la méthode PUT
         case "PUT":
-
             switch($role){
                 case "Publisher":
                     //Traitement moderator
                     ini_set("allow_url_fopen", true);
                     /// Récupération des données envoyées par le Client
                     $postedData = file_get_contents('php://input');
-                    $postedData = (array) json_decode($postedData,True);
+                    $data = (array) json_decode($postedData,True);
 
-                    $id = $postedData['id'];
-                    $datepub = $postedData['date_pub'];
-                    $date_modif = date('y/m/d h:i:s');
-                    $contenu = $postedData['contenu'];
+                    $typeLike = $data['typeLike'];
+                    $id_article = $data['id_article'];
 
-                    if(empty($id) || empty($datepub) || empty($contenu)){
+                    if(empty($id_article) || empty($typeLike)){
                         deliver_response(403, "ERREUR : Les champs doivent tous être renseignés", NULL);
                     }else{
                         // Traitement
-                        $query = "UPDATE article SET date_pub = ?, date_modif = ?, contenu = ? WHERE id_article = ?";
+                        $query = "UPDATE liker SET typeLike = ? WHERE id_article = ? and login = ?";
                         $update = $linkpdo->prepare($query);
-                        $update->execute(array($datepub,$date_modif,$contenu,$id));
+                        $update->execute(array($typeLike,$id_article,$login));
                         /// Envoi de la réponse au Client
                         if ($update){
                             deliver_response(200, "UPDATE PUT OK".implode($update->errorInfo()), NULL);
@@ -73,28 +70,30 @@ if(is_jwt_valid($bearer_token)){
                             deliver_response(400, "UPDATE ERROR", NULL);
                         }
                     }
-
                     break;
                 default:
                     //Traitement d'autres roles
-                    deliver_response(403, "ERREUR : Pas de droit de UPDATE", NULL);
+                    deliver_response(403, "ERREUR : Pas de droit de PUT", NULL);
                     break;
             }
-
             break;
             /// Cas de la méthode DELETE
         case "DELETE":
             switch($role){
-                case "Publisher" || "Moderator":
+                case "Publisher":
                     //Traitement des roles Publisher et Moderator
-                    if (!empty($_GET['id'])) {
+                    if (!empty($_GET['id'])){
                         /// Traitement
                         $id = $_GET['id'];
-                        $delete = deletePubMod($linkpdo,$id);
+                        $delete = deletePubLike($linkpdo,$id,$login);
+                    }else{
+                        deliver_response(404, "DELETE ERREUR : DATA NOT FOUND", NULL);
                     }
                     /// Envoi de la réponse au Client
                     if($delete){
                         deliver_response(200, "DELETE OK : ".implode($delete->errorInfo()), NULL);
+                    }else{
+                        deliver_response(400, "DELETE ERREUR : ".implode($delete->errorInfo()), NULL);
                     }
                     break;
                 default:
@@ -134,10 +133,10 @@ function putLikePub($linkpdo,$typeLike,$id_article,$login){
     }
 }
 
-function deletePubMod($linkpdo,$id){
-    $query = "DELETE FROM article WHERE id_article = ?";
+function deletePubLike($linkpdo,$id,$login){
+    $query = "DELETE FROM liker WHERE id_article = ? and login = ?";
     $delete = $linkpdo->prepare($query);
-    $delete->execute(array($id));
+    $delete->execute(array($id,$login));
     return $delete;
 }
 ?>
