@@ -42,35 +42,35 @@ Le payload d'un jeton est composé des champs :
 
 ### *GET* :
 URLs : 
-http://localhost/R4.01/blog/serveur.php
-http://localhost/R4.01/blog/serveur.php/?id=3
-http://localhost/R4.01/blog/serveur.php?login=publisher1
+- http://localhost/R4.01/blog/serveur.php
+- http://localhost/R4.01/blog/serveur.php/?id=3
+- http://localhost/R4.01/blog/serveur.php?login=publisher1
 
 ### *POST* :
-URL : http://localhost/R4.01/blog/serveur.php
-Donnée : {"contenu" : "Ceci est un test"}
+- URL : http://localhost/R4.01/blog/serveur.php
+- Donnée : {"contenu" : "Ceci est un test"}
 
 ### *PUT* :
-> URL : http://localhost/R4.01/blog/serveur.php
-> Donnée : {"id" : 1,"date_pub" : "2022-02-01","contenu" : "Cet article est edité"}
+- URL : http://localhost/R4.01/blog/serveur.php
+- Donnée : {"id" : 1,"date_pub" : "2022-02-01","contenu" : "Cet article est edité"}
 //À changer : TAK BOLEH TUKAR DATE PUB
 
 ### *DELETE* :
-> URL : http://localhost/R4.01/blog/serveur.php/?id=3
+- URL : http://localhost/R4.01/blog/serveur.php/?id=3
 
 
 ## serveurLike.php (Likes)
 
 ### *POST* :
-> URL : http://localhost/R4.01/blog/serveurLike.php
-> Donnée : {"typeLike" : 1,"id_article" : 6}
+- URL : http://localhost/R4.01/blog/serveurLike.php
+- Donnée : {"typeLike" : 1,"id_article" : 6}
 
 ### *PUT* :
-> URL : http://localhost/R4.01/blog/serveurLike.php
-> Donnée : {"typeLike" : -1,"id_article" : 6}
+- URL : http://localhost/R4.01/blog/serveurLike.php
+- Donnée : {"typeLike" : -1,"id_article" : 6}
 
 ### *DELETE* :
-> URL : http://localhost/R4.01/blog/serveurLike.php/?id=3
+- URL : http://localhost/R4.01/blog/serveurLike.php/?id=3
 
 ## Tips
 Pour tester chaque requete, il faut recuperer son jeton du serveurJeton en envoyant une requete POST avec son id et mot de passe. Copier le jeton et coller dans la partie Authorization sur Postman API. Les fichiers Postman API sont également disponibles dans le projet.
