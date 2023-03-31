@@ -83,6 +83,6 @@ URLs :
 ## Tips
 Pour tester chaque requete, il faut recuperer son jeton du serveurJeton en envoyant une requete POST avec son id et mot de passe. Copier le jeton et coller dans la partie Authorization sur Postman API. Les fichiers Postman API sont également disponibles dans le projet.
 
-Veuiller créer une base de données 'blog' et importer le fichier SQL fourni dans la base de données (BDD MySQL locale comme PhpMyAdmin)
+Veuiller créer une base de données 'blog' (avec ***latin1_swedish_ci*** comme collation) et importer le fichier SQL fourni dans la base de données (BDD MySQL locale comme PhpMyAdmin)
 
 # Bonne utilisation!
