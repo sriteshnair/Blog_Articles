@@ -3,10 +3,18 @@ Ceci s'agit d'un API REST qui traite la gestion des articles de blogs
 # Notice d'utilisation
 
 ## Liste de Logins et MDP
-1.  login : publisher1
+1.  login : moderator1
     mdp : $iutinfo
-2.  login : publisher 2
-    mdp : $iutinfo
+2.  login : moderator2
+    mdp : $iutinfo2
+3.  login : moderator3
+    mdp : $iutinfo3
+4.  login : publisher1
+    mdp : pub1
+5.  login : publisher2
+    mdp : pub2
+6.  login : publisher3
+    mdp : pub3
 
 ## Projet
 Ce projet est composé de 3 serveurs API :
